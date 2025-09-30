@@ -3,8 +3,8 @@ import tensorflow as tf
 
 def placeholder(P, Q, N):
     X = tf.compat.v1.placeholder(shape = (None, P, N), dtype = tf.float32)
-    TE = tf.compat.v1.placeholder(shape = (None, P + Q, 2), dtype = tf.int32)
-    label = tf.compat.v1.placeholder(shape = (None, Q, N), dtype = tf.float32)
+    TE = tf.compat.v1.placeholder(shape = (None, P + Q, 2), dtype = tf.int32)  # Time Embedding info (day-of-week & time-of-day)
+    label = tf.compat.v1.placeholder(shape = (None, Q, N), dtype = tf.float32)  # future traffic
     is_training = tf.compat.v1.placeholder(shape = (), dtype = tf.bool)
     return X, TE, label, is_training
 
@@ -16,7 +16,7 @@ def FC(x, units, activations, bn, bn_decay, is_training, use_bias = True):
         units = list(units)
         activations = list(activations)
     assert type(units) == list
-    for num_unit, activation in zip(units, activations):
+    for num_unit, activation in zip(units, activations):  # (1×1 conv acts like dense)
         x = tf_utils.conv2d(
             x, output_dims = num_unit, kernel_size = [1, 1], stride = [1, 1],
             padding = 'VALID', use_bias = use_bias, activation = activation,
@@ -24,14 +24,14 @@ def FC(x, units, activations, bn, bn_decay, is_training, use_bias = True):
     return x
 
 def STEmbedding(SE, TE, T, D, bn, bn_decay, is_training):
-    '''
+    """
     spatio-temporal embedding
     SE:     [N, D]
     TE:     [batch_size, P + Q, 2] (dayofweek, timeofday)
     T:      num of time steps in one day
     D:      output dims
-    retrun: [batch_size, P + Q, N, D]
-    '''
+    return: [batch_size, P + Q, N, D]   combined spatial+temporal embedding.
+    """
     # spatial embedding
     SE = tf.expand_dims(tf.expand_dims(SE, axis = 0), axis = 0)
     SE = FC(
@@ -48,14 +48,14 @@ def STEmbedding(SE, TE, T, D, bn, bn_decay, is_training):
     return tf.add(SE, TE)
 
 def spatialAttention(X, STE, K, d, bn, bn_decay, is_training):
-    '''
+    """
     spatial attention mechanism
     X:      [batch_size, num_step, N, D]
     STE:    [batch_size, num_step, N, D]
     K:      number of attention heads
     d:      dimension of each attention outputs
     return: [batch_size, num_step, N, D]
-    '''
+    """
     D = K * d
     X = tf.concat((X, STE), axis = -1)
     # [batch_size, num_step, N, K * d]
@@ -85,14 +85,14 @@ def spatialAttention(X, STE, K, d, bn, bn_decay, is_training):
     return X
 
 def temporalAttention(X, STE, K, d, bn, bn_decay, is_training, mask = True):
-    '''
+    """
     temporal attention mechanism
     X:      [batch_size, num_step, N, D]
     STE:    [batch_size, num_step, N, D]
     K:      number of attention heads
     d:      dimension of each attention outputs
     return: [batch_size, num_step, N, D]
-    '''
+    """
     D = K * d
     X = tf.concat((X, STE), axis = -1)
     # [batch_size, num_step, N, K * d]
@@ -142,13 +142,13 @@ def temporalAttention(X, STE, K, d, bn, bn_decay, is_training, mask = True):
     return X
 
 def gatedFusion(HS, HT, D, bn, bn_decay, is_training):
-    '''
+    """
     gated fusion
     HS:     [batch_size, num_step, N, D]
     HT:     [batch_size, num_step, N, D]
     D:      output dims
     return: [batch_size, num_step, N, D]
-    '''
+    """
     XS = FC(
         HS, units = D, activations = None,
         bn = bn, bn_decay = bn_decay,
@@ -171,7 +171,7 @@ def STAttBlock(X, STE, K, d, bn, bn_decay, is_training, mask = False):
     return tf.add(X, H)
 
 def transformAttention(X, STE_P, STE_Q, K, d, bn, bn_decay, is_training):
-    '''
+    """
     transform attention mechanism
     X:      [batch_size, P, N, D]
     STE_P:  [batch_size, P, N, D]
@@ -179,7 +179,7 @@ def transformAttention(X, STE_P, STE_Q, K, d, bn, bn_decay, is_training):
     K:      number of attention heads
     d:      dimension of each attention outputs
     return: [batch_size, Q, N, D]
-    '''
+    """
     D = K * d
     # query: [batch_size, Q, N, K * d]
     # key:   [batch_size, P, N, K * d]
@@ -219,7 +219,7 @@ def transformAttention(X, STE_P, STE_Q, K, d, bn, bn_decay, is_training):
     return X
     
 def GMAN(X, TE, SE, P, Q, T, L, K, d, bn, bn_decay, is_training):
-    '''
+    """
     GMAN
     X：       [batch_size, P, N]
     TE：      [batch_size, P + Q, 2] (time-of-day, day-of-week)
@@ -231,7 +231,7 @@ def GMAN(X, TE, SE, P, Q, T, L, K, d, bn, bn_decay, is_training):
     K：       number of attention heads
     d：       dimension of each attention head outputs
     return：  [batch_size, Q, N]
-    '''
+    """
     D = K * d
     # input
     X = tf.expand_dims(X, axis = -1)

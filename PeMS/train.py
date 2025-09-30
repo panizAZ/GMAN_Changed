@@ -4,6 +4,7 @@ import utils, model
 import time, datetime
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--time_slot', type = int, default = 5,
@@ -85,7 +86,7 @@ optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
 train_op = optimizer.minimize(loss, global_step = global_step)
 parameters = 0
 for variable in tf.compat.v1.trainable_variables():
-    parameters += np.product([x.value for x in variable.get_shape()])
+    parameters += np.prod(variable.get_shape().as_list())
 utils.log_string(log, 'trainable parameters: {:,}'.format(parameters))
 utils.log_string(log, 'model compiled!')
 saver = tf.compat.v1.train.Saver()

@@ -1,6 +1,17 @@
 import numpy as np
 import pandas as pd
 
+
+# This file handles everything before the model:
+# Logging (log_string)
+# Metrics computation (metric)
+# Convert sequences to supervised learning format (seq2instance)
+# Load and preprocess data:
+#       Split train/val/test
+#       Normalize
+#       Load spatial and temporal embeddings
+
+
 # log string
 def log_string(log, string):
     log.write(string + '\n')
@@ -8,6 +19,13 @@ def log_string(log, string):
     print(string)
 
 # metric
+# Computes evaluation metrics for traffic prediction:
+#
+# MAE (Mean Absolute Error)
+#
+# RMSE (Root Mean Squared Error)
+#
+# MAPE (Mean Absolute Percentage Error)
 def metric(pred, label):
     with np.errstate(divide = 'ignore', invalid = 'ignore'):
         mask = np.not_equal(label, 0)
@@ -66,12 +84,14 @@ def loadData(args):
         temp = line.split(' ')
         index = int(temp[0])
         SE[index] = temp[1 :]
-        
+
+    #### make sure the index is datetime
+    if not isinstance(df.index, pd.DatetimeIndex):
+        df.index = pd.to_datetime(df.index)
     # temporal embedding 
     Time = df.index
     dayofweek =  np.reshape(Time.weekday, newshape = (-1, 1))
-    timeofday = (Time.hour * 3600 + Time.minute * 60 + Time.second) \
-                // Time.freq.delta.total_seconds()
+    timeofday = (Time.hour * 3600 + Time.minute * 60 + Time.second) // 300  ### 300s = 5min interval
     timeofday = np.reshape(timeofday, newshape = (-1, 1))    
     Time = np.concatenate((dayofweek, timeofday), axis = -1)
     # train/val/test

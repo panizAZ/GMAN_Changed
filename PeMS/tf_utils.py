@@ -1,12 +1,14 @@
 import tensorflow as tf
 
+
+# conv2d = convolution + optional batch normalization + activation.
 def conv2d(x, output_dims, kernel_size, stride = [1, 1],
            padding = 'SAME', use_bias = True, activation = tf.nn.relu,
            bn = False, bn_decay = None, is_training = None):
-    input_dims = x.get_shape()[-1].value
+    input_dims = x.get_shape()[-1]  ###
     kernel_shape = kernel_size + [input_dims, output_dims]
     kernel = tf.Variable(
-        tf.glorot_uniform_initializer()(shape = kernel_shape),
+        tf.keras.initializers.GlorotUniform()(shape = kernel_shape),
         dtype = tf.float32, trainable = True, name = 'kernel')
     x = tf.nn.conv2d(x, kernel, [1] + stride + [1], padding = padding)
     if use_bias:
@@ -21,7 +23,7 @@ def conv2d(x, output_dims, kernel_size, stride = [1, 1],
     return x
 
 def batch_norm(x, is_training, bn_decay):
-    input_dims = x.get_shape()[-1].value
+    input_dims = x.get_shape()[-1]  ###
     moment_dims = list(range(len(x.get_shape()) - 1))
     beta = tf.Variable(
         tf.zeros_initializer()(shape = [input_dims]),
@@ -50,6 +52,8 @@ def batch_norm(x, is_training, bn_decay):
     x = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
     return x
 
+
+# Dropout prevents overfitting by forcing the network to not rely on specific neurons.
 def dropout(x, drop, is_training):
     x = tf.cond(
         is_training,
