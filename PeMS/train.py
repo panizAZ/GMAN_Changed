@@ -43,6 +43,10 @@ parser.add_argument('--model_file', default = 'data/GMAN(PeMS)',
                     help = 'save the model to disk')
 parser.add_argument('--log_file', default = 'data/log(PeMS)',
                     help = 'log file')
+
+parser.add_argument('--resume', type=str, default=None,
+                    help='path to checkpoint to resume training from') ###
+
 args = parser.parse_args()
 
 start = time.time()
@@ -93,7 +97,17 @@ saver = tf.compat.v1.train.Saver()
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
 sess = tf.compat.v1.Session(config = config)
-sess.run(tf.compat.v1.global_variables_initializer())
+###sess.run(tf.compat.v1.global_variables_initializer())
+
+
+if args.resume is not None:
+    print(f"Restoring model from {args.resume}")
+    saver.restore(sess, args.resume)
+    # global_step is already restored from checkpoint
+else:
+    sess.run(tf.compat.v1.global_variables_initializer())
+
+
 utils.log_string(log, '**** training model ****')
 num_val = valX.shape[0]
 wait = 0
