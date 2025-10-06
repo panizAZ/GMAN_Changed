@@ -3,12 +3,15 @@ import argparse
 import utils
 import time
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+
+tf.disable_v2_behavior()
+print("TF version:", tf.__version__)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--P', type = int, default = 12,
+parser.add_argument('--P', type = int, default = 6, ##
                     help = 'history steps')
-parser.add_argument('--Q', type = int, default = 12,
+parser.add_argument('--Q', type = int, default = 6, ##
                     help = 'prediction steps')
 parser.add_argument('--train_ratio', type = float, default = 0.7,
                     help = 'training set [default : 0.7]')
@@ -26,7 +29,20 @@ parser.add_argument('--model_file', default = 'data/GMAN(PeMS)',
                     help = 'pre-trained model')
 parser.add_argument('--log_file', default = 'data/log(PeMS)',
                     help = 'log file')
-args = parser.parse_args()
+
+class Args:
+    P = 12
+    Q = 12
+    train_ratio = 0.7
+    val_ratio = 0.1
+    test_ratio = 0.2
+    batch_size = 32
+    traffic_file = "data/pems-bay.h5"
+    SE_file = "data/SE(PeMS).txt"
+    model_file = "/content/drive/MyDrive/gman_checkpoints/default/GMAN(PeMS)"
+    log_file = "data/test_log.txt"
+
+args = Args()
 
 start = time.time()
 
@@ -55,7 +71,7 @@ with tf.Session(graph = graph, config = config) as sess:
     saver.restore(sess, args.model_file)
     parameters = 0
     for variable in tf.compat.v1.trainable_variables():
-        parameters += np.product([x.value for x in variable.get_shape()])
+        parameters += np.prod(variable.get_shape().as_list())
     utils.log_string(log, 'trainable parameters: {:,}'.format(parameters))
     pred = graph.get_collection(name = 'pred')[0]
     utils.log_string(log, 'model restored!')
