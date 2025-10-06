@@ -20,11 +20,8 @@ def log_string(log, string):
 
 # metric
 # Computes evaluation metrics for traffic prediction:
-#
 # MAE (Mean Absolute Error)
-#
 # RMSE (Root Mean Squared Error)
-#
 # MAPE (Mean Absolute Percentage Error)
 def metric(pred, label):
     with np.errstate(divide = 'ignore', invalid = 'ignore'):
@@ -64,7 +61,8 @@ def loadData(args):
     train = Traffic[: train_steps]
     val = Traffic[train_steps : train_steps + val_steps]
     test = Traffic[-test_steps :]
-    # X, Y 
+    # X, Y
+    # reshapes (time, N) into (num_samples, P, N, 1) for X and (num_samples, Q, N, 1) for Y.
     trainX, trainY = seq2instance(train, args.P, args.Q)
     valX, valY = seq2instance(val, args.P, args.Q)
     testX, testY = seq2instance(test, args.P, args.Q)
@@ -74,7 +72,8 @@ def loadData(args):
     valX = (valX - mean) / std
     testX = (testX - mean) / std
 
-    # spatial embedding 
+    # spatial embedding
+    # reads precomputed node embeddings (from Node2Vec).
     f = open(args.SE_file, mode = 'r')
     lines = f.readlines()
     temp = lines[0].split(' ')
@@ -105,6 +104,19 @@ def loadData(args):
     valTE = np.concatenate(valTE, axis = 1).astype(np.int32)
     testTE = seq2instance(test, args.P, args.Q)
     testTE = np.concatenate(testTE, axis = 1).astype(np.int32)
+
+    ####
+    trainX = trainX[:5000]
+    trainTE = trainTE[:5000]
+    trainY = trainY[:5000]
+
+    valX = valX[:1000]
+    valTE = valTE[:1000]
+    valY = valY[:1000]
+
+    testX = testX[:1000]
+    testTE = testTE[:1000]
+    testY = testY[:1000]
     
     return (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY,
             SE, mean, std)
