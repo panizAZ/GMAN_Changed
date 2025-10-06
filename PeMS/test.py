@@ -31,8 +31,8 @@ parser.add_argument('--log_file', default = 'data/log(PeMS)',
                     help = 'log file')
 
 class Args:
-    P = 12
-    Q = 12
+    P = 6
+    Q = 6
     train_ratio = 0.7
     val_ratio = 0.1
     test_ratio = 0.2
