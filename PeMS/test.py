@@ -8,6 +8,8 @@ import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 print("TF version:", tf.__version__)
 
+start = time.time()
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--P', type = int, default = 6, ##
                     help = 'history steps')
@@ -43,8 +45,6 @@ class Args:
     log_file = "data/test_log.txt"
 
 args = Args()
-
-start = time.time()
 
 log = open(args.log_file, 'w')
 utils.log_string(log, str(args)[10 : -1])
